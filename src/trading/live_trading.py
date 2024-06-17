@@ -1,0 +1,1 @@
+#Script para fazer trades em tempo real com base nas predições do modelo
