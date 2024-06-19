@@ -22,7 +22,7 @@ def start_server():
                 print(f'Mensagem recebida do EA MQL4: {message}')
                 
                 # Lógica para responder ao EA (opcional)
-                # Aqui você pode enviar comandos para o EA em MQL4 se necessário
+                # Colocar lógica aqui
                 
                 # Enviar uma mensagem de confirmação
                 response = 'Mensagem recebida pelo servidor Python'
