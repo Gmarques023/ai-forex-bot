@@ -5,20 +5,20 @@ from dotenv import load_dotenv
 load_dotenv()
 
 mt5.initialize(
-   "C:\Program Files\FPMarkets MT5 Terminal",   # path to the MetaTrader 5 terminal EXE file
-   login=os.getenv('ACCOUNT_NUMBER'),           # account number
-   password=os.getenv('ACCOUNT_PASSWORD'),      # password
-   server=os.getenv('ACCOUNT_SERVER'),          # server name as it is specified in the terminal                        
+   "C:\Program Files\FPMarkets MT5 Terminal",   
+   login=os.getenv('ACCOUNT_NUMBER'),           
+   password=os.getenv('ACCOUNT_PASSWORD'),     
+   server=os.getenv('ACCOUNT_SERVER'),                               
 )
 
-    # Verifique se a conexão foi bem sucedida
+    # Verificar se a conexão foi bem sucedida
 if not mt5.initialize():
     print("Falha ao inicializar o MetaTrader 5.")
 else:
     # Símbolo do instrumento 
     symbol = "GBPUSD"
     # Volume da operação (tamanho da posição em lotes)
-    volume = 0.10
+    volume = 0.01
     # Obtenha o preço de compra atual (ask) do símbolo
     price = mt5.symbol_info_tick(symbol).ask
     # stop loss (SL) e take profit (TP)
