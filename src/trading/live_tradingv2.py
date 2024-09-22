@@ -2,16 +2,15 @@ import pandas as pd
 import MetaTrader5 as mt5
 import joblib
 import numpy as np
-import pandas_ta as ta  # Biblioteca para indicadores técnicos como RSI e SMA
+import pandas_ta as ta
 from utils.get_last_candle_data_from_csv import get_last_candle_data_from_csv
 from trading.place_order import place_order
 
 # Carregar o modelo treinado
 model_path = './models/trained_models/random_forestv4.pkl'
 model = joblib.load(model_path)
-zones_csv = '../data/GBPUSD/suport_resistance_gbpusd.csv'
 
-# Função para criar janelas deslizantes com base nas últimas 60 velas
+# Função para criar janelas deslizantes com base nas últimas velas selecionadas
 def create_rolling_window_features(data, window_size=60):
     if len(data) >= window_size:
         window = data.iloc[-window_size:].copy()  # Copiar a janela de dados
@@ -33,13 +32,6 @@ def create_rolling_window_features(data, window_size=60):
     
     return np.array([])  # Retorna um array vazio se o tamanho da janela não for suficiente
 
-def get_support_resistance_zones(csv_file):
-    zones_df = pd.read_csv(csv_file)
-    support_high = zones_df['support_high'].iloc[0]
-    support_low = zones_df['support_low'].iloc[0]
-    resistance_high = zones_df['resistance_high'].iloc[0]
-    resistance_low = zones_df['resistance_low'].iloc[0]
-    return support_high, support_low, resistance_high, resistance_low
 
 def live_trading(symbol, csv_file, last_trade_time):
     # Carregar os dados do CSV
@@ -77,30 +69,22 @@ def live_trading(symbol, csv_file, last_trade_time):
                     print(f"Probabilidade de Buy na vela anterior: {previous_prediction_proba[1]:.2f}")
                     print(f"Probabilidade de Sell na vela anterior: {previous_prediction_proba[0]:.2f}")
                     
-                    # Obter as zonas de suporte e resistência
-                    support_high, support_low, resistance_high, resistance_low = get_support_resistance_zones(zones_csv)
-
-                    # Condição para Buy (se o fechamento da vela anterior não estiver na zona de resistência)
-                    if prediction_proba[1] > 0.5 and previous_prediction_proba[1] > 0.5:
-                        previous_candle = df.iloc[-1]  # Penúltima vela
-                        if previous_candle['close'] > previous_candle['open']:
-                            if not (resistance_low <= previous_candle['close'] <= resistance_high):
-                                print("Probabilidade de Buy > 0.5 e condições satisfeitas, colocando ordem de compra.")
-                                place_order(symbol, mt5.ORDER_TYPE_BUY)
-                            else:
-                                print("Fechamento da vela anterior na zona de resistência, nenhuma ordem de compra colocada.")
-                        else:
-                            print("Condição da vela anterior não satisfeita: fechamento <= abertura, nenhuma ordem de compra colocada.")
+                    # Condição para Buy
+                    #if prediction_proba[1] > 0.5 and previous_prediction_proba[1] > 0.5:
+                        # Verificar se o fechamento da vela anterior é maior que a abertura
+                    #    previous_candle = df.iloc[-1]  # Penúltima vela
+                    #    if previous_candle['close'] > previous_candle['open']:
+                    #        print("Probabilidade de Buy > 0.5 e condição da vela anterior satisfeita, colocando ordem de compra.")
+                    #        place_order(symbol, mt5.ORDER_TYPE_BUY)
+                    #    else:
+                    #        print("Condição da vela anterior não satisfeita: fechamento <= abertura, nenhuma ordem de compra colocada.")
                     
-                    # Condição para Sell (se o fechamento da vela anterior não estiver na zona de suporte)
-                    elif prediction_proba[0] > 0.5 and previous_prediction_proba[0] > 0.5:
-                        previous_candle = df.iloc[-1]
+                    # Condição para Sell
+                    if prediction_proba[0] > 0.5 and previous_prediction_proba[0] > 0.5: 
+                        previous_candle = df.iloc[-1] 
                         if previous_candle['close'] < previous_candle['open']:
-                            if not (support_low <= previous_candle['close'] <= support_high):
-                                print("Probabilidade de Sell > 0.5 e condições satisfeitas, colocando ordem de venda.")
-                                place_order(symbol, mt5.ORDER_TYPE_SELL)
-                            else:
-                                print("Fechamento da vela anterior na zona de suporte, nenhuma ordem de venda colocada.")
+                            print("Probabilidade de Sell > 0.5 e condição da vela anterior satisfeita, colocando ordem de venda.")
+                            place_order(symbol, mt5.ORDER_TYPE_SELL)
                         else:
                             print("Condição da vela anterior não satisfeita: fechamento >= abertura, nenhuma ordem de venda colocada.")
                 else:
