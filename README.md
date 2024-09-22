@@ -1,4 +1,4 @@
-1. Implementação de modelo de regressao linear
-   Integração com mt4
-
-2. Desenvolvimento de modelo Redes Neurais Artificiais (ANNs) e Redes Neurais Recorrentes (RNNs):
+1. Integração com MT5
+2. Treinamento de um modelo Random Forest Classifier com SMA, RSI e xandle features
+3. Implementação de funções de trading com o modelo treinado para Sell
+4. live testing
