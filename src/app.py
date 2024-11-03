@@ -35,7 +35,6 @@ if __name__ == "__main__":
     try:
         while True:
             update_last_candles('GBPUSD', './data/GBPUSD/GBPUSD15.csv')
-            #last_trade_time = live_trading('GBPUSD.r', './data/GBPUSD/GBPUSD15.csv', last_trade_time)
             last_trade_time = live_trading('GBPUSD', './data/GBPUSD/GBPUSD15.csv', last_trade_time)
             wait_until_next_interval()
     except KeyboardInterrupt:
