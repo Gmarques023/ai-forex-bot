@@ -32,18 +32,6 @@ def create_rolling_window_features(data, window_size=60):
     
     return np.array([])  # Retorna um array vazio se o tamanho da janela não for suficiente
 
-def is_shooting_star(candle):
-    body = candle['open'] - candle['close']
-    upper_shadow = candle['high'] - max(candle['close'], candle['open'])
-    #lower_shadow = min(candle['close'], candle['open']) - candle['low']
-    
-    # Critérios para "shooting star" com sombras longas e corpo pequeno
-    is_bearish = candle['close'] < candle['open']
-    small_body = body < upper_shadow * 0.55        
-    long_upper_shadow = upper_shadow > 2 * body                                         
-
-    return is_bearish and small_body and long_upper_shadow
-
 def live_trading(symbol, csv_file, last_trade_time):
     # Carregar os dados do CSV
     df = pd.read_csv(csv_file)
@@ -93,7 +81,7 @@ def live_trading(symbol, csv_file, last_trade_time):
                     # Condição para Sell
                     if prediction_proba[0] > 0.5 and previous_prediction_proba[0] > 0.5: 
                         previous_candle = df.iloc[-1] 
-                        if previous_candle['close'] < previous_candle['open'] and is_shooting_star(previous_candle):
+                        if previous_candle['close'] < previous_candle['open']:
                             print("Probabilidade de Sell > 0.5 e condição da vela anterior satisfeita, colocando ordem de venda.")
                             place_order(symbol, mt5.ORDER_TYPE_SELL)
                         else:

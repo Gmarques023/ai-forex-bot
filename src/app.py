@@ -4,8 +4,8 @@ from datetime import datetime
 from dotenv import load_dotenv
 from utils.update_last_candles import update_last_candles
 from utils.wait_until_next_interval import wait_until_next_interval
-from trading.live_tradingv2 import live_trading 
-#from trading.live_trading_lstm import live_trading_lstm
+from trading.live_trading import live_trading 
+
 load_dotenv()
 
 account_number = os.getenv('ACCOUNT_NUMBER')

@@ -41,6 +41,8 @@ def place_order(symbol, order_type):
     }
     
     result = mt5.order_send(request)
-    print(f"Order send result: {result}")
+    #print(f"Order send result: {result}")
+    print("")
+    print("Ordem colocada")
     if result.retcode != mt5.TRADE_RETCODE_DONE:
         print(f"Order failed: {result.comment}")
