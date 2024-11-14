@@ -13,7 +13,7 @@ model = joblib.load(model_path)
 # Função para criar janelas deslizantes com base nas últimas velas selecionadas
 def create_rolling_window_features(data, window_size=60):
     if len(data) >= window_size:
-        window = data.iloc[-window_size:].copy()  # Copiar a janela de dados
+        window = data.iloc[-window_size:].copy()
 
         # Calcular o RSI e a SMA
         window['RSI_10'] = ta.rsi(window['close'], length=10)
@@ -51,33 +51,39 @@ def live_trading(symbol, csv_file, last_trade_time):
         candle_time = candle_time.replace(tzinfo=None)
         last_trade_time = last_trade_time.replace(tzinfo=None)
 
-        # Verificar se esta é uma nova vela
+        # Executar a previsão para a nova vela
         if candle_time > last_trade_time:
-            # Criar features com base nas últimas 60 velas
             rolling_features = create_rolling_window_features(df, window_size=60)
             
             if rolling_features.size > 0:
-                #print(f"Features para previsão: {rolling_features}")
-                
-                # Fazer a previsão das probabilidades para a sequência de 3 velas vermelhas consecutivas
+                # Print das features da vela atual
+                print(f"Features da vela atual (últimas 60 velas):")
+                print(rolling_features)
+
                 prediction_proba = model.predict_proba(rolling_features)[0]
                 print(f"Probabilidade de 3 velas vermelhas: {prediction_proba[1]:.2f}")
 
-                # Verificar a previsão da vela anterior para consistência
-                previous_features = create_rolling_window_features(df.iloc[:-1], window_size=60)  # Excluir a última vela para prever a anterior
+                previous_features = create_rolling_window_features(df.iloc[:-1], window_size=60)
                 if previous_features.size > 0:
+                    # Print das features da vela anterior
+                    print(f"Features da vela anterior (últimas 60 velas):")
+                    print(previous_features)
+
                     previous_prediction_proba = model.predict_proba(previous_features)[0]
                     print(f"Probabilidade de 3 velas vermelhas consecutivas na vela anterior: {previous_prediction_proba[1]:.2f}")
                     
                     # Condição para Sell (3 velas vermelhas consecutivas previstas)
-                    if prediction_proba[1] > 0.5 and previous_prediction_proba[1] > 0.5:
+                    if prediction_proba[1] > 0.01: #and previous_prediction_proba[1] < 0.5:
                         previous_candle = df.iloc[-1]
                         print("Alta probabilidade de 3 velas vermelhas consecutivas, colocando ordem de venda.")
                         place_order(symbol, mt5.ORDER_TYPE_SELL)
+                        
+                        # Atualizar o last_trade_time somente após realizar a negociação
+                        last_trade_time = candle_time
                 else:
                     print("Não foi possível calcular a previsão para a vela anterior.")
 
-            return candle_time
+            return last_trade_time
         else:
             print("Já foi feita uma negociação para esta vela.")
     return last_trade_time
