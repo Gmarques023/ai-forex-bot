@@ -31,7 +31,7 @@ def initialize_mt5():
     print("MetaTrader 5 initialized successfully.")
     return True
 
-# Função para atualizar as últimas velas no CSV~
+# Função para atualizar as últimas velas no CSV
 def round_time_to_previous_15_minutes(dt):
     return dt - timedelta(minutes=dt.minute % 15, seconds=dt.second, microseconds=dt.microsecond)
 
@@ -172,6 +172,7 @@ def create_rolling_window_features(data, window_size=60):
     return np.array([])
 
 def live_trading(symbol, csv_file, last_trade_time):
+  
     df = pd.read_csv(csv_file)
     
     # Renomear colunas
@@ -189,21 +190,21 @@ def live_trading(symbol, csv_file, last_trade_time):
 
         # Executar a previsão para a nova vela
         if candle_time > last_trade_time:
-            rolling_features = create_rolling_window_features(df, window_size=60)
+            rolling_features = create_rolling_window_features(df.iloc[:-1], window_size=60)
             
             if rolling_features.size > 0:
                 # Print das features da vela atual
-                print(f"Features da vela atual (últimas 60 velas):")
-                print(rolling_features)
+                #print(f"Features da vela atual (últimas 60 velas):")
+                #print(rolling_features)
 
                 prediction_proba = model.predict_proba(rolling_features)[0]
                 print(f"Probabilidade de 3 velas vermelhas: {prediction_proba[1]:.2f}")
 
-                previous_features = create_rolling_window_features(df.iloc[:-1], window_size=60)
+                previous_features = create_rolling_window_features(df.iloc[:-2], window_size=60)
                 if previous_features.size > 0:
                     # Print das features da vela anterior
-                    print(f"Features da vela anterior (últimas 60 velas):")
-                    print(previous_features)
+                    #print(f"Features da vela anterior (últimas 60 velas):")
+                    #print(previous_features)
 
                     previous_prediction_proba = model.predict_proba(previous_features)[0]
                     print(f"Probabilidade de 3 velas vermelhas consecutivas na vela anterior: {previous_prediction_proba[1]:.2f}")
@@ -216,6 +217,7 @@ def live_trading(symbol, csv_file, last_trade_time):
                         
                         # Atualizar o last_trade_time somente após realizar a negociação
                         last_trade_time = candle_time
+                      
                 else:
                     print("Não foi possível calcular a previsão para a vela anterior.")
             return last_trade_time
@@ -227,23 +229,26 @@ def wait_until_next_interval():
     now = datetime.now()
     current_minute = now.minute
     wait_time = 0
-    if current_minute % 15 != 0:
-        next_interval_minute = (current_minute // 15 + 1) * 15
-        if next_interval_minute == 60:
-            next_interval_minute = 0
-            next_interval_hour = (now.hour + 1) % 24
-            next_interval_time = now.replace(hour=next_interval_hour, minute=next_interval_minute, second=0, microsecond=0)
-        else:
-            next_interval_time = now.replace(minute=next_interval_minute, second=0, microsecond=0)
-        wait_time = (next_interval_time - now).total_seconds()
-    time.sleep(wait_time)
+    next_interval_minute = (current_minute // 15 + 1) * 15
 
+    # Corrige o caso em que next_interval_minute chega a 60
+    if next_interval_minute == 60:
+        next_interval_minute = 0
+        next_interval_hour = (now.hour + 1) % 24
+        next_interval_time = now.replace(hour=next_interval_hour, minute=next_interval_minute, second=1, microsecond=0)
+    else:
+        next_interval_time = now.replace(minute=next_interval_minute, second=1, microsecond=0)
+
+    # Calcula o tempo de espera e garante que é positivo
+    wait_time = max((next_interval_time - now).total_seconds(), 0.1)
+    time.sleep(wait_time)
+  
 if __name__ == "__main__":
     if not initialize_mt5():
         exit()
 
     last_trade_time = datetime.min 
-
+   
     try:
         while True:
             update_last_candles('GBPUSD', './data/GBPUSD/GBPUSD.csv')
